@@ -83,7 +83,6 @@ BillBuddy is built directly around **Google's Gemma 4** open-weight model (`gemm
 ## My Agent Session
 <!-- Optional, but judges love it.  Save your session with DevRelay and embed it with the agent_session tag (see the challenge page), or link to it. -->
 
-{% agent_session 46bebdc5-20aa-4735-938c-1f8f89bee7d8 %}
 
 > *Built using **Antigravity** (Google DeepMind agentic coding assistant). The application architecture, local Ollama API proxy, responsive multi-template CSS, PDF export engine, and Gemma 4 prompts were constructed and verified end-to-end in this session.*
 
