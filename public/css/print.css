@@ -1,0 +1,62 @@
+/* Print Stylesheet for BillBuddy */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-header,
+  .editor-panel,
+  .preview-toolbar,
+  .modal-overlay,
+  .toast-container,
+  .floating-ai-btn {
+    display: none !important;
+  }
+
+  .app-container {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .preview-panel {
+    background: transparent !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .invoice-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .invoice-paper {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    min-height: auto !important;
+    width: 100% !important;
+  }
+
+  /* Prevent awkward page breaks */
+  .inv-header,
+  .inv-parties-grid,
+  .inv-bottom-section {
+    page-break-inside: avoid;
+  }
+
+  .inv-table tr {
+    page-break-inside: avoid;
+  }
+}

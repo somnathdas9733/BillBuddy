@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BillBuddy | Smart Invoicing & Gemma 4 AI Financial Intelligence</title>
+  <meta name="description" content="Effortlessly create, customize, and download professional PDF bills and invoices. Powered by local Gemma 4 Ollama AI for instant business audit, financial risk analysis, and natural language billing.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Application Stylesheets -->
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/invoice.css">
+  <link rel="stylesheet" href="/css/print.css" media="print">
+
+  <!-- html2pdf.js & marked.js for PDF generation & Markdown AI output -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="logo-container">
+      <div class="logo-icon">
+        <i class="fas fa-file-invoice-dollar"></i>
+      </div>
+      <div class="brand-text">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <h1>BillBuddy</h1>
+          <span class="brand-badge">PRO</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Model Status Pill -->
+    <div class="header-center">
+      <div id="aiStatusPill" class="ai-status-pill" title="Local Ollama AI Status">
+        <span class="status-dot"></span>
+        <span id="aiStatusText">Connecting Ollama...</span>
+      </div>
+      <select id="aiModelSelect" class="form-select" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.78rem;" title="Select Active Ollama Model">
+        <option value="gemma4:latest">gemma4:latest</option>
+      </select>
+    </div>
+
+    <!-- Action Toolbar -->
+    <div class="header-actions">
+      <button id="aiDraftBtn" class="btn btn-ai btn-sm" title="Describe your bill in plain words and Gemma 4 will build it">
+        <i class="fas fa-wand-magic-sparkles"></i> AI Smart Draft
+      </button>
+      <button id="aiAnalyzeBtn" class="btn btn-primary btn-sm" title="Audit invoice pricing, payment risk & upsells with Gemma 4">
+        <i class="fas fa-brain"></i> AI Analyzer
+      </button>
+      <button id="historyBtn" class="btn btn-secondary btn-sm" title="Open saved invoices archive">
+        <i class="fas fa-folder"></i> Bills
+      </button>
+      <button id="saveInvoiceBtn" class="btn btn-outline btn-sm" title="Save this invoice to local browser storage">
+        <i class="fas fa-save"></i> Save
+      </button>
+      <button id="newInvoiceBtn" class="btn btn-outline btn-sm" title="Start a new blank invoice">
+        <i class="fas fa-plus"></i> New
+      </button>
+      <button id="themeToggleBtn" class="btn btn-outline btn-icon" title="Toggle Dark/Light Mode">
+        <i class="fas fa-sun"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container">
+
+    <!-- LEFT COLUMN: Editor Panel -->
+    <section class="editor-panel">
+      
+      <!-- Preset Switcher Bar -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; background: var(--bg-surface); padding: 0.6rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);"><i class="fas fa-layer-group"></i> Quick Presets:</span>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="preset-btn btn btn-outline btn-sm" data-preset="freelance">Freelance Tech</button>
+          <button type="button" class="preset-btn btn btn-outline btn-sm" data-preset="retail">Retail Store</button>
+          <button type="button" class="preset-btn btn btn-outline btn-sm" data-preset="agency">Agency / GST</button>
+        </div>
+      </div>
+
+      <!-- 1. Business Info Card -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="fas fa-building"></i>
+            <span>Your Business Information</span>
+          </div>
+          <label class="btn btn-outline btn-sm" style="cursor: pointer;">
+            <i class="fas fa-image"></i> Upload Logo
+            <input type="file" id="logoInput" accept="image/*" style="display: none;">
+          </label>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group form-col-full">
+            <label class="form-label">Business / Company Name</label>
+            <input type="text" id="businessName" class="form-input" placeholder="e.g. Acme Studio LLC">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="businessEmail" class="form-input" placeholder="billing@acme.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="businessPhone" class="form-input" placeholder="+1 (555) 000-0000">
+          </div>
+          <div class="form-group form-col-full">
+            <label class="form-label">Billing Address</label>
+            <textarea id="businessAddress" class="form-textarea" placeholder="Street, City, State, ZIP, Country" rows="2"></textarea>
+          </div>
+          <div class="form-group form-col-full">
+            <label class="form-label">Tax / GST / VAT ID</label>
+            <input type="text" id="businessTaxId" class="form-input" placeholder="e.g. US-EIN: 12-3456789 or GSTIN: 19AAACC1234D1Z">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Customer / Client Info Card -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="fas fa-user-tie"></i>
+            <span>Customer / Client Details</span>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group form-col-full">
+            <label class="form-label">Customer / Client Name</label>
+            <input type="text" id="clientName" class="form-input" placeholder="e.g. John Doe / Global Enterprises">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Customer Email</label>
+            <input type="email" id="clientEmail" class="form-input" placeholder="client@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Customer Phone</label>
+            <input type="tel" id="clientPhone" class="form-input" placeholder="+1 (555) 123-4567">
+          </div>
+          <div class="form-group form-col-full">
+            <label class="form-label">Customer Address</label>
+            <textarea id="clientAddress" class="form-textarea" placeholder="Client Street, City, State, Country" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Invoice Metadata Card -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Invoice Terms & Details</span>
+          </div>
+        </div>
+
+        <div class="form-grid-4">
+          <div class="form-group">
+            <label class="form-label" style="display:flex; justify-content:space-between;">
+              <span>Invoice #</span>
+              <a href="javascript:void(0)" id="autoInvoiceNumBtn" style="color:var(--primary); text-decoration:none; text-transform:none;">Auto</a>
+            </label>
+            <input type="text" id="invoiceNumber" class="form-input" placeholder="INV-2026-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Currency</label>
+            <select id="currencySelect" class="form-select">
+              <option value="$">USD ($)</option>
+              <option value="₹">INR (₹)</option>
+              <option value="€">EUR (€)</option>
+              <option value="£">GBP (£)</option>
+              <option value="A$">AUD (A$)</option>
+              <option value="C$">CAD (C$)</option>
+              <option value="¥">JPY (¥)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Issue Date</label>
+            <input type="date" id="invoiceDate" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Due Date</label>
+            <input type="date" id="dueDate" class="form-input">
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">Payment Terms</label>
+            <select id="paymentTerms" class="form-select">
+              <option value="Due on Receipt">Due on Receipt</option>
+              <option value="Net 7">Net 7 Days</option>
+              <option value="Net 14" selected>Net 14 Days</option>
+              <option value="Net 30">Net 30 Days</option>
+              <option value="Net 60">Net 60 Days</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">Payment Status</label>
+            <select id="statusSelect" class="form-select">
+              <option value="pending" selected>Pending Payment</option>
+              <option value="paid">Paid & Settled</option>
+              <option value="overdue">Overdue</option>
+              <option value="draft">Draft</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Line Items Table Card -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="fas fa-list-ol"></i>
+            <span>Bill Line Items</span>
+          </div>
+          <button type="button" id="addItemBtn" class="btn btn-secondary btn-sm">
+            <i class="fas fa-plus"></i> Add Item
+          </button>
+        </div>
+
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th style="width: 70px;">Qty</th>
+              <th style="width: 105px;">Rate</th>
+              <th style="width: 75px;">Tax %</th>
+              <th style="width: 75px;">Disc %</th>
+              <th style="width: 110px; text-align:right;">Total</th>
+              <th style="width: 38px;"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsContainer">
+            <!-- Dynamic Rows Injected Here -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 5. Extra Charges & Payment Notes -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="fas fa-money-check-alt"></i>
+            <span>Payment Instructions & Notes</span>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Shipping / Handling Fee</label>
+            <input type="number" id="shippingInput" class="form-input" value="0" min="0" step="any">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payment Methods / Bank / UPI</label>
+            <textarea id="paymentDetailsInput" class="form-textarea" placeholder="Bank Name, Account #, IFSC/Routing, UPI ID" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Client Notes & Appreciation</label>
+            <textarea id="notesInput" class="form-textarea" placeholder="Thank you for your business!" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Terms & Conditions</label>
+            <textarea id="termsInput" class="form-textarea" placeholder="Payment due within 14 days..." rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN: Live Interactive Invoice Preview & Download -->
+    <section class="preview-panel">
+      
+      <!-- Toolbar -->
+      <div class="preview-toolbar">
+        <div class="template-selector">
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Theme:</span>
+          <button type="button" class="template-btn active" data-template="modern">Modern</button>
+          <button type="button" class="template-btn" data-template="executive">Executive</button>
+          <button type="button" class="template-btn" data-template="emerald">Emerald</button>
+          <button type="button" class="template-btn" data-template="monochrome">Monochrome</button>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="downloadPdfBtn" class="btn btn-primary" title="Download High-Resolution A4 PDF for customer">
+            <i class="fas fa-file-pdf"></i> Download PDF
+          </button>
+          <button id="printInvoiceBtn" class="btn btn-secondary" title="Print Invoice directly">
+            <i class="fas fa-print"></i> Print
+          </button>
+          <button id="copySummaryBtn" class="btn btn-outline btn-icon" title="Copy text summary for WhatsApp or Email">
+            <i class="fas fa-copy"></i>
+          </button>
+          <button id="exportJsonBtn" class="btn btn-outline btn-icon" title="Export Invoice JSON backup">
+            <i class="fas fa-file-code"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live A4 Invoice Sheet Container -->
+      <div class="invoice-wrapper" id="invoicePreviewWrapper">
+        <div class="invoice-paper template-modern" id="invoicePaper">
+          
+          <div>
+            <!-- Header: Logo, Company & Invoice Meta -->
+            <div class="inv-header">
+              <div class="inv-brand-section">
+                <img id="pLogo" class="inv-logo-preview" style="display: none;" alt="Company Logo">
+                <h2 id="pCompanyName" class="inv-company-name">Apex Cloud Solutions</h2>
+                <div id="pCompanyDetails" class="inv-company-details">billing@apexcloud.io</div>
+              </div>
+
+              <div class="inv-meta-section">
+                <div class="inv-title-badge">INVOICE</div>
+                <div id="pInvoiceNumber" class="inv-number">INV-2026-0042</div>
+                <div>
+                  <span id="pStatus" class="inv-status-pill pending">Pending</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Client & Dates Grid -->
+            <div class="inv-parties-grid">
+              <div class="inv-client-info">
+                <h4>Billed To:</h4>
+                <div id="pClientName" class="inv-client-name">NovaTech Enterprises</div>
+                <div id="pClientDetails" class="inv-client-details">accounts@novatech.co</div>
+              </div>
+
+              <div class="inv-date-info">
+                <h4>Invoice Details:</h4>
+                <div class="inv-dates-list">
+                  <div class="inv-date-row">
+                    <span class="inv-date-label">Issue Date:</span>
+                    <span id="pInvoiceDate" class="inv-date-val">2026-10-18</span>
+                  </div>
+                  <div class="inv-date-row">
+                    <span class="inv-date-label">Due Date:</span>
+                    <span id="pDueDate" class="inv-date-val">2026-11-01</span>
+                  </div>
+                  <div class="inv-date-row">
+                    <span class="inv-date-label">Payment Terms:</span>
+                    <span id="pPaymentTerms" class="inv-date-val">Net 14</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Line Items Table -->
+            <table class="inv-table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th class="col-qty">Qty</th>
+                  <th class="col-rate">Rate</th>
+                  <th class="col-discount">Disc</th>
+                  <th class="col-tax">Tax</th>
+                  <th class="col-amount">Amount</th>
+                </tr>
+              </thead>
+              <tbody id="pTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Bottom Section: Notes & Totals -->
+          <div>
+            <div class="inv-bottom-section">
+              <div>
+                <div class="inv-notes-block">
+                  <h5>Notes & Instructions</h5>
+                  <p id="pNotes">Thank you for your business!</p>
+                </div>
+
+                <div class="inv-payment-details">
+                  <h5 style="font-size:0.72rem; text-transform:uppercase; color:#64748b; font-weight:700; margin-bottom:0.25rem;">Payment Information</h5>
+                  <div id="pPaymentDetails" style="font-size: 0.82rem; color: #334155; font-family: var(--font-mono); white-space: pre-line;">Bank details</div>
+                </div>
+
+                <div id="pTerms" style="margin-top: 0.75rem; font-size: 0.76rem; color: #94a3b8; font-style: italic;"></div>
+              </div>
+
+              <div class="inv-totals-block">
+                <div class="inv-total-row">
+                  <span>Subtotal:</span>
+                  <span id="pSubtotal" style="font-weight: 600;">$ 0.00</span>
+                </div>
+                <div class="inv-total-row">
+                  <span>Total Discount:</span>
+                  <span id="pDiscount" style="color: #e11d48;">$ 0.00</span>
+                </div>
+                <div class="inv-total-row">
+                  <span>Estimated Tax:</span>
+                  <span id="pTax">$ 0.00</span>
+                </div>
+                <div class="inv-total-row">
+                  <span>Shipping & Handling:</span>
+                  <span id="pShipping">$ 0.00</span>
+                </div>
+                <div class="inv-total-row grand-total">
+                  <span>Total Due:</span>
+                  <span id="pGrandTotal">$ 0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="inv-footer">
+              Generated securely with <strong>BillBuddy</strong> • Thank you for your partnership!
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL 1: AI Invoice Analyzer & Gemma 4 Assistant -->
+  <div class="modal-overlay" id="analyzerModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fas fa-brain" style="color: #8b5cf6;"></i>
+          <span>Gemma 4 AI Financial Auditor & Advisor</span>
+        </div>
+        <button type="button" class="btn btn-outline btn-icon modal-close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" id="analyzerContent">
+        <!-- Loaded by AIAnalyzer -->
+      </div>
+
+      <!-- Interactive Q&A chat box inside the modal -->
+      <div style="padding: 1rem 1.75rem; background: var(--bg-surface); border-top: 1px solid var(--border-subtle);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+          <i class="fas fa-comments"></i> Ask Gemma 4 About This Bill / Business Finances:
+        </div>
+        <div id="aiChatMessages" style="max-height: 120px; overflow-y: auto; margin-bottom: 0.6rem; display: flex; flex-direction: column;"></div>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" id="aiChatInput" class="form-input" placeholder="e.g. How can I politely ask for 50% advance? Or should I charge late fees?">
+          <button id="aiChatSendBtn" class="btn btn-ai btn-sm">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary modal-close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: AI Smart Draft (Natural Language Bill Creator) -->
+  <div class="modal-overlay" id="draftModal">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fas fa-wand-magic-sparkles" style="color: #ec4899;"></i>
+          <span>AI Natural Language Bill Creator</span>
+        </div>
+        <button type="button" class="btn btn-outline btn-icon modal-close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1rem;">
+          Describe what you want to bill in plain English. <strong>Gemma 4</strong> will analyze your request and instantly fill in items, quantities, pricing, and terms.
+        </p>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Billing Instructions</label>
+          <textarea id="draftPromptInput" class="form-textarea" style="min-height: 110px;" placeholder="e.g. Bill Stark Industries $1,500 for mobile app UI prototype and $400 for API integration, add 10% tax, Net 14 days."></textarea>
+        </div>
+
+        <div style="margin-top: 0.75rem;">
+          <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Try these examples:</span>
+          <div class="preset-chips" style="margin-top: 0.4rem;">
+            <span class="chip draft-preset-chip" data-prompt="Bill Acme Corp for 20 hours of senior frontend development at $90/hr and $250 server setup fee, 8.25% tax, Net 14.">Freelance Dev ($2,050)</span>
+            <span class="chip draft-preset-chip" data-prompt="Invoice Horizon Retail for 50 units of Organic Coffee Beans at $14 each and 20 barista tumblers at $22 each, 5% discount, Net 30.">Wholesale Order</span>
+            <span class="chip draft-preset-chip" data-prompt="Bill Vertex Studio ₹50,000 for 3D character animation and ₹25,000 for sound design, 18% GST, due on receipt.">Creative Studio (₹75k)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+        <button type="button" id="submitDraftBtn" class="btn btn-ai">
+          <i class="fas fa-wand-magic-sparkles"></i> Generate Invoice
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: Saved Bills Archive -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fas fa-folder-open" style="color: #06b6d4;"></i>
+          <span>Saved Bills Archive</span>
+        </div>
+        <button type="button" class="btn btn-outline btn-icon modal-close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" id="historyListContainer">
+        <!-- Rendered by app.js -->
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary modal-close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Scripts -->
+  <script src="/js/storage.js"></script>
+  <script src="/js/pdf-export.js"></script>
+  <script src="/js/ai-analyzer.js"></script>
+  <script src="/js/invoice.js"></script>
+  <script src="/js/app.js"></script>
+
+</body>
+</html>
