@@ -34,15 +34,13 @@ https://canva.link/jvva0wjyljgzmlo
   - 🧠 **Gemma 4 Financial Intelligence Audit**: Instant health rating (1–10), payment risk score, tax verification, upsell advice, and client copy-paste email.
   - ✨ **Natural Language Bill Generator**: Instant prompt-to-bill parsing.
 
-<!-- You can embed a video or screenshots here -->
-*(Add your video demo link or screenshots here)*
 
 ## Code
 <!-- Show us the code!  You can embed a GitHub repo directly into your post. -->
 
 {% github https://github.com/somnathdas9733/BillBuddy %}
 
-> *(Replace with your GitHub repository URL)*
+
 
 ### Tech Stack
 - **Frontend**: Vanilla JavaScript (ES6+), Semantic HTML5, bespoke CSS design system (Dark & Light mode, `@media print` stylesheet).
@@ -89,12 +87,6 @@ BillBuddy is built directly around **Google's Gemma 4** open-weight model (`gemm
 
 > *Built using **Antigravity** (Google DeepMind agentic coding assistant). The application architecture, local Ollama API proxy, responsive multi-template CSS, PDF export engine, and Gemma 4 prompts were constructed and verified end-to-end in this session.*
 
-## My First User
-<!-- Optional, but this is where bonus points live.  Did someone use it?  Who were they, what did they say, and did they pay?  If not, remove this section. -->
-
-> *"As an independent cloud consultant, billing used to mean wrestling with Word documents and manual math. With BillBuddy, I typed a one-line prompt and had a client-ready PDF generated in 5 seconds. The Gemma 4 analyzer pointed out that my payment terms were too lax for a first-time client and gave me a ready-to-use email. Having all of this run locally with complete privacy is incredible."*
-> 
-> — **David M.**, Freelance Cloud Architect (Austin, TX)
 
 ## Prize Categories
 <!-- Which partner categories are you entering?  List every one that applies, or remove this section. -->
